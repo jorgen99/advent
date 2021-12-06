@@ -9,7 +9,5 @@ fun readResourceFile(path: String): List<String> {
     return File(resource.toURI()).readLines()
 }
 
-fun String.md5(): String =
-    BigInteger(1, MessageDigest.getInstance("MD5")
-        .digest(toByteArray()))
-        .toString(16)
+fun <T> Iterable<T>.replace(old: T, new: T) = map { if (it == old) new else it }
+fun <T> Iterable<T>.product(other: Iterable<T>) = flatMap { a -> other.map { b -> a to b } }

@@ -1,6 +1,7 @@
 package day4
 
 import util.readResourceFile
+import util.replace
 
 fun main() {
     val fileLines = readResourceFile("day4_input.txt")
@@ -21,7 +22,7 @@ fun main() {
     val boards = numbersAndBoards
         .drop(1)
         .chunked(5)
-        .map { it.map { s -> s.split(Regex("\\s+")).map { it.toInt() } } }
+        .map { it.map { s -> s.split(Regex("\\s+")).map { n -> n.toInt() } } }
 
     step1(numbers, boards)
     step2(numbers, boards)
@@ -73,7 +74,7 @@ private fun markCalledNumber(boards: List<List<List<Int>>>, calledNo: Int) =
 
 fun printBoards(board: List<List<Int>>) {
     board.forEach {
-        println(it.joinToString(" ") { String.format("%1$2s", it) })
+        println(it.joinToString(" ") { i -> String.format("%1$2s", i) })
     }
     println("")
 }
@@ -96,5 +97,3 @@ private fun checkRows(board: List<List<Int>>): Boolean {
     return board.any { it.sum() == -5 }
 }
 
-fun <T> Iterable<T>.product(other: Iterable<T>) = flatMap { a -> other.map { b -> a to b } }
-fun <E> Iterable<E>.replace(old: E, new: E) = map { if (it == old) new else it }
