@@ -2,85 +2,79 @@ package day5
 
 import util.readResourceFile
 import kotlin.math.abs
-
-val sampleVentLines = """
-  0,9 -> 5,9
-  8,0 -> 0,8
-  9,4 -> 3,4
-  2,2 -> 2,1
-  7,0 -> 7,4
-  6,4 -> 2,0
-  0,9 -> 2,9
-  3,4 -> 1,4
-  0,0 -> 8,8
-  5,5 -> 8,2
-"""
+import kotlin.math.max
 
 fun main() {
-    val seaFloor = mutableMapOf<Pair<Int, Int>, Int>()
-//    val noOfDangerAreas = part1(seaFloor)
     val fileLines = readResourceFile("day5_input.txt")
-    val noOfDangerAreas = part1(mutableMapOf(), fileLines)
-    println("step1: $noOfDangerAreas")
+    val noOfDangerAreas = noOfDangerAreas(mutableMapOf(), fileLines)
+    println("part2: $noOfDangerAreas")
 }
 
-private fun part1(seaFloor: MutableMap<Pair<Int, Int>, Int>, lines: List<String>): Int {
+fun noOfDangerAreas(seaFloor: MutableMap<Pair<Int, Int>, Int>, lines: List<String>): Int {
     parseCoords(lines)
         .map { line(it) }
         .forEach { incrementCoordinates(seaFloor, it) }
-    return noOfDangerAreas(seaFloor)
-}
-
-fun printMap(seaFloor: MutableMap<Pair<Int, Int>, Int>, hSize: Int, vSize: Int): List<String> {
-    val map = mutableListOf<String>()
-    for (x in 0..vSize) {
-        var l = ""
-        for (y in 0..hSize) {
-            val v = seaFloor[y to x]
-            val mark = when (v ?: 0) {
-                0 -> "."
-                else -> v.toString()
-            }
-            l += "$mark "
-        }
-        l.trim()
-        map.add("$l\n")
-    }
-    return map.toList()
-}
-
-fun noOfDangerAreas(seaFloor: MutableMap<Pair<Int, Int>, Int>): Int {
     return seaFloor.values.count { it > 1 }
 }
 
 fun incrementCoordinates(seaFloor: MutableMap<Pair<Int, Int>, Int>, line: List<Pair<Int, Int>>) {
-    line.forEach { p -> seaFloor.compute(p) { pair, n -> (n ?: 0) + 1 } }
+    line.forEach { p -> seaFloor.compute(p) { _, n -> (n ?: 0) + 1 } }
 }
 
 fun line(startStop: Pair<Pair<Int, Int>, Pair<Int, Int>>): List<Pair<Int, Int>> {
+    fun min(a: Pair<Int, Int>, b: Pair<Int, Int>) = if (a.first + a.second <= b.first + b.second) a else b
+
     val (c1, c2) = startStop
-    if (c1.first != c2.first && c1.second != c2.second) {
-        if (abs(c1.first - c2.first) == abs(c1.second - c2.second)) {
-            if (c1.first - c2.first <= 0 && c1.second - c2.second <= 0) {
-                return generateSequence(c1) { (x, y) -> Pair(x + 1, y + 1) }
-                    .take(abs(c2.second - c1.second)).toList()
-            }
-        }
+    val xlength = c2.first - c1.first
+    val ylength = c2.second - c1.second
+    if (xlength == 0 || ylength == 0) {
+        val startCoordinate = min(c1, c2)
+        return straightLine(xlength, ylength, startCoordinate)
+    } else if (abs(xlength) - abs(ylength) == 0) {
+        return diagonalLine(c1, c2)
     }
-    if (c1.second == c2.second) {
-        if (c1.first - c2.first <= 0) {
-            return (c1.first..c2.first)
-                .map { it to c1.second }
-        }
-        return (c2.first..c1.first)
-            .map { it to c1.second }
-    }
-    if (c1.second - c2.second <= 0) {
-        return (c1.second..c2.second)
-            .map { c1.first to it }
-    }
-    return (c2.second..c1.second)
-        .map { c1.first to it }
+    return listOf()
+}
+
+private fun diagonalLine(
+    c1: Pair<Int, Int>,
+    c2: Pair<Int, Int>
+): List<Pair<Int, Int>> {
+    // diagonal
+    val leftToRight: (Pair<Int, Int>) -> Pair<Int, Int> = { (x, y) -> x + 1 to y + 1 }
+    val rightToLeft: (Pair<Int, Int>) -> Pair<Int, Int> = { (x, y) -> x - 1 to y + 1 }
+
+    val length = abs(c1.first - c2.first) + 1
+    //   line          start          diagonal
+    // (8,2)->(2,8)      c1           rightToLeft
+    // (6,4)->(2,0)      c2           leftToRight
+    // (0,2)->(4,6)      c1           leftToRight
+    // (5,5)->(8,2)      c2           rightToLeft
+    val start =
+        if (c1.first > c2.first && c1.second < c2.second) c1
+        else if (c1.first > c2.first && c1.second > c2.second) c2
+        else if (c1.first < c2.first && c1.second > c2.second) c2
+        else c1
+    val end = if (c1 == start) c2 else c1
+    val diagonal = if (start.first > end.first && start.second < end.second) rightToLeft else leftToRight
+    return generateSequence(start) { diagonal(it) }
+        .take(length)
+        .toList()
+}
+
+private fun straightLine(
+    xlength: Int,
+    ylength: Int,
+    startCoordinate: Pair<Int, Int>
+): List<Pair<Int, Int>> {
+    val incFirst: (Pair<Int, Int>) -> Pair<Int, Int> = { (a, b) -> a + 1 to b }
+    val incSecond: (Pair<Int, Int>) -> Pair<Int, Int> = { (a, b) -> a to b + 1 }
+
+    val length = max(abs(xlength), abs(ylength)) + 1
+    val incFirstOrSecond = if (abs(xlength) < abs(ylength)) incSecond else incFirst
+    return generateSequence(startCoordinate) { incFirstOrSecond(it) }
+        .take(length)
+        .toList()
 }
 
 fun parseCoords(lines: List<String>): List<Pair<Pair<Int, Int>, Pair<Int, Int>>> {
