@@ -10,18 +10,37 @@ fun main() {
         .map { it.trim() }
         .map { it.toInt() }
 
-    val fuel = fuel(crabPositions)
-    println("step1: fuel = $fuel")
+    val fuelStep1 = fuel(crabPositions, differance)
+    println("step1: fuel = $fuelStep1")
+
+    val fuelStep2 = fuel(crabPositions, increasing)
+    println("step2: fuel = $fuelStep2")
 }
 
-fun fuel(positions: List<Int>): Int {
-    fun fuelToPosition(position: Int, positions: List<Int>): Int {
-        return positions.sumOf { abs(position - it) }
+val differance: (Int, Int) -> Int = { i, j -> abs(i - j) }
+val increasing: (Int, Int) -> Int = { i, j ->
+    val diff = differance(i, j)
+    tailrec fun inc(i: Int, lastSum: Int): Int {
+        return if (i > diff) lastSum else
+            inc(i + 1, i + lastSum)
+    }
+    inc(1, 0)
+}
+
+fun fuel(positions: List<Int>, distanceToFuel: (Int, Int) -> Int): Int {
+    tailrec fun fuelToPosition(position: Int, positions: List<Int>, lastFuel: Int): Int {
+        if (position > positions.size) {
+            return lastFuel
+        }
+        val fuel: Int = positions.sumOf { distanceToFuel(it, position) }
+//        println("position: $position, lastFuel: $lastFuel, fuel = $fuel")
+        return if (fuel >= lastFuel) lastFuel else
+            fuelToPosition(position + 1, positions, fuel)
     }
 
     val median = positions.median()
-    return ((median - 1)..(median + 1))
-        .minOfOrNull { fuelToPosition(it, positions) } ?: 0
+//    println("median = $median")
+    return fuelToPosition(median, positions, Int.MAX_VALUE)
 }
 
 fun List<Int>.median() =
