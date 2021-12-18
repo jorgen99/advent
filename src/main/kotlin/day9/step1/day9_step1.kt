@@ -1,4 +1,4 @@
-package day9
+package day9.step1
 
 import util.product
 import util.readResourceFile

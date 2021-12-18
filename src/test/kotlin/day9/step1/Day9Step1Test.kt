@@ -1,9 +1,9 @@
-package day9
+package day9.step1
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-internal class Day9KtTest {
+internal class Day9Step1Test {
 
     private val sample = """
         2199943210
@@ -50,12 +50,14 @@ internal class Day9KtTest {
     @Test
     fun it_should_find_all_lowpoints() {
         assertThat(lowPoints(matrix))
-            .containsAll(listOf(
-                (1 to 0),
-                (9 to 0),
-                (2 to 2),
-                (6 to 4)
-            ))
+            .containsAll(
+                listOf(
+                    (1 to 0),
+                    (9 to 0),
+                    (2 to 2),
+                    (6 to 4)
+                )
+            )
     }
 
     @Test
